@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ورود</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="js/config.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>ورود / ثبت نام</h1>
+
+<input id="email" type="email" placeholder="ایمیل">
+
+<br><br>
+
+<input id="password" type="password" placeholder="رمز عبور">
+
+<br><br>
+
+<button onclick="signUp()">
+ثبت نام
+</button>
+
+<button onclick="signIn()">
+ورود
+</button>
+
+<p id="msg"></p>
+
+</div>
+
+<script src="js/auth.js"></script>
+
+</body>
+
+</html>
