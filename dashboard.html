@@ -1,18 +1,126 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>داشبورد</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>داشبورد | Podcast Academy</title>
+  <link rel="stylesheet" href="cssstyle.css" />
+  <style>
+    /* استایل‌های اضافه برای داشبورد */
+    .podcast-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .podcast-card {
+      background: rgba(255,255,255,0.08);
+      border-radius: 15px;
+      padding: 20px;
+      width: 200px;
+      text-align: center;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+    .podcast-card:hover {
+      transform: scale(1.03);
+      background: rgba(255,255,255,0.15);
+    }
+    .podcast-card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .podcast-card h3 {
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    .podcast-card p {
+      font-size: 14px;
+      opacity: 0.7;
+    }
+    .logout-btn {
+      background: #ef4444;
+      margin-top: 20px;
+      padding: 10px 25px;
+    }
+    .logout-btn:hover {
+      background: #dc2626;
+    }
+    #user-email {
+      opacity: 0.7;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h1>📚 داشبورد من</h1>
+    <p id="user-email">خوش آمدید، <span id="emailDisplay"></span></p>
 
-<h1>
-داشبورد کاربر
-</h1>
+    <div id="podcastContainer" class="podcast-list">
+      <!-- پادکست‌ها به‌صورت داینامیک بارگذاری می‌شوند -->
+    </div>
 
-<p>
-ورود موفق بود ✅
-</p>
+    <button class="logout-btn" onclick="logout()">خروج</button>
+  </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    // کدهای Supabase (همون jsconfig)
+    const SUPABASE_URL = "https://rkdjnkkdrhyzxzdlypff.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZGpua2tkcmh5enh6ZGx5cGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NjAxMDksImV4cCI6MjA5NzMzNjEwOX0.vadAJI4DhbAi5Y12gRd-OLVUYjvKa8R69PYvT68niyo";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // نمایش ایمیل کاربر
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      document.getElementById('emailDisplay').innerText = user.email;
+    }
+
+    // بارگذاری لیست پادکست‌ها (فرض می‌کنیم جدول podcasts وجود داره)
+    async function loadPodcasts() {
+      const { data, error } = await supabase
+        .from('podcasts')
+        .select('*');
+      if (error) {
+        console.error(error);
+        return;
+      }
+      const container = document.getElementById('podcastContainer');
+      container.innerHTML = '';
+      data.forEach(pod => {
+        const card = document.createElement('div');
+        card.className = 'podcast-card';
+        card.innerHTML = `
+          <img src="${pod.cover_image || 'https://via.placeholder.com/200'}" alt="${pod.title}" />
+          <h3>${pod.title}</h3>
+          <p>${pod.description || ''}</p>
+          <button onclick="startQuiz('${pod.id}')">شرکت در آزمون</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // رفتن به صفحه آزمون
+    function startQuiz(podcastId) {
+      window.location.href = quiz.html?podcastId=${podcastId};
+    }
+
+    // خروج
+    async function logout() {
+      await supabase.auth.signOut();
+      window.location.href = "login.html";
+    }
+
+    // اجرا
+    loadUser();
+    loadPodcasts();
+  </script>
 </body>
 </html>
