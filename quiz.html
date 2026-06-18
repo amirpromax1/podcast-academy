@@ -86,26 +86,35 @@
       <button class="submit-btn" onclick="submitQuiz()">✅ پایان آزمون</button>
     </div>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
-    // ===== تنظیمات =====
+    // =============================================
+    // تنظیمات Supabase
+    // =============================================
     const SUPABASE_URL = "https://rkdjnkkdrhyzxzdlypff.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZGpua2tkcmh5enh6ZGx5cGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NjAxMDksImV4cCI6MjA5NzMzNjEwOX0.vadAJI4DhbAi5Y12gRd-OLVUYjvKa8R69PYvT68niyo";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ===== متغیرها =====
+    // =============================================
+    // متغیرهای سراسری
+    // =============================================
     let currentQuestionIndex = 0;
     let questions = [];
     let answers = {};
     let podcastId = null;
 
-    // ===== گرفتن آیدی از URL =====
+    // =============================================
+    // گرفتن آیدی از URL
+    // =============================================
     function getPodcastId() {
       const params = new URLSearchParams(window.location.search);
       return params.get('podcastId');
     }
 
-    // ===== نمایش خطا =====
+    // =============================================
+    // نمایش خطا
+    // =============================================
     function showError(msg) {
       const el = document.getElementById('errorMsg');
       el.style.display = 'block';
@@ -116,10 +125,12 @@
       document.getElementById('errorMsg').style.display = 'none';
     }
 
-    // ===== بارگذاری سوالات =====
+    // =============================================
+    // بارگذاری سوالات
+    // =============================================
     async function loadQuestions() {
       podcastId = getPodcastId();
-      console.log('📌 podcastId:', podcastId); // دیباگ
+      console.log('📌 podcastId:', podcastId);
 
       if (!podcastId) {
         showError('شناسه پادکست پیدا نشد!');
@@ -136,8 +147,7 @@
           .select('*')
           .eq('podcast_id', podcastId);
 
-        console.log('📦 data:', data); // دیباگ
-        console.log('❌ error:', error); // دیباگ
+        console.log('📦 تعداد سوالات:', data ? data.length : 0);
 
         if (error) {
           showError('خطا در دریافت سوالات: ' + error.message);
@@ -162,23 +172,27 @@
       }
     }
 
-    // ===== نمایش سوال =====
+    // =============================================
+    // نمایش سوال
+    // =============================================
     function showQuestion(index) {
       if (!questions.length) return;
       const q = questions[index];
-      document.getElementById('questionCounter').innerText = `سوال ${index+1} از ${questions.length}`;
+      document.getElementById('questionCounter').innerText = 'سوال ' + (index + 1) + ' از ' + questions.length;
 
-      let html = `<div class="question-box"><p>${q.question}</p><div class="options">`;
+      let html = '<div class="question-box"><p>' + q.question + '</p><div class="options">';
       const opts = q.options || [];
-      opts.forEach(opt => {
+      opts.forEach(function(opt) {
         const checked = (answers[q.id] === opt) ? 'checked' : '';
-        html += `<label><input type="radio" name="q" value="${opt}" ${checked} onchange="answers['${q.id}']='${opt}'"> ${opt}</label>`;
+        html += '<label><input type="radio" name="q" value="' + opt + '" ' + checked + ' onchange="answers[\'' + q.id + '\']=\'' + opt + '\'"> ' + opt + '</label>';
       });
       html += '</div></div>';
       document.getElementById('questionContainer').innerHTML = html;
     }
 
-    // ===== قبلی / بعدی =====
+    // =============================================
+    // قبلی / بعدی
+    // =============================================
     function nextQuestion() {
       if (currentQuestionIndex < questions.length - 1) {
         currentQuestionIndex++;
@@ -193,11 +207,16 @@
       }
     }
 
-    // ===== پایان آزمون =====
+    // =============================================
+    // پایان آزمون
+    // =============================================
     async function submitQuiz() {
-      const unanswered = questions.filter(q => !answers[q.id]);
+      const unanswered = questions.filter(function(q) {
+        return !answers[q.id];
+      });
+
       if (unanswered.length > 0) {
-        if (!confirm(`⚠️ هنوز به ${unanswered.length} سوال پاسخ ندادی! ادامه می‌دی؟`)) {
+        if (!confirm('⚠️ هنوز به ' + unanswered.length + ' سوال پاسخ ندادی! ادامه می‌دی؟')) {
           return;
         }
       }
@@ -209,7 +228,8 @@
       }
 
       let correct = 0;
-      for (const q of questions) {
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
         const selected = answers[q.id] || null;
         const isCorrect = (selected === q.correct_answer);
         if (isCorrect) correct++;
@@ -223,10 +243,14 @@
       }
 
       const score = Math.round((correct / questions.length) * 100);
-      window.location.href = `result.html?score=${score}&total=${questions.length}&correct=${correct}`;
+      
+      // ===== مهم: ارسال podcastId به کارنامه =====
+      window.location.href = 'result.html?score=' + score + '&total=' + questions.length + '&correct=' + correct + '&podcastId=' + podcastId;
     }
 
-    // ===== اجرا =====
+    // =============================================
+    // اجرا
+    // =============================================
     loadQuestions();
   </script>
 </body>
