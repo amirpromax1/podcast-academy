@@ -132,12 +132,16 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
-    // ===== تنظیمات =====
+    // =============================================
+    // تنظیمات Supabase
+    // =============================================
     const SUPABASE_URL = "https://rkdjnkkdrhyzxzdlypff.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZGpua2tkcmh5enh6ZGx5cGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NjAxMDksImV4cCI6MjA5NzMzNjEwOX0.vadAJI4DhbAi5Y12gRd-OLVUYjvKa8R69PYvT68niyo";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ===== گرفتن پارامترها =====
+    // =============================================
+    // گرفتن پارامترها
+    // =============================================
     function getParams() {
       const params = new URLSearchParams(window.location.search);
       return {
@@ -148,4 +152,131 @@
       };
     }
 
-    // ===== بازخورد =====
+    // =============================================
+    // بازخورد
+    // =============================================
+    function getFeedback(score) {
+      if (score >= 80) return '🎉 عالی! تسلط کامل داری!';
+      if (score >= 60) return '👍 خوب بود، ولی می‌تونی بهتر بشی!';
+      if (score >= 40) return '📖 مرور دوباره پادکست توصیه میشه.';
+      return '💪 نگران نباش، با تمرین بیشتر حتماً پیشرفت می‌کنی!';
+    }
+
+    // =============================================
+    // بازگشت به داشبورد
+    // =============================================
+    function goDashboard() {
+      window.location.href = 'dashboard.html';
+    }
+
+    // =============================================
+    // اصلی
+    // =============================================
+    async function loadResult() {
+      const container = document.getElementById('resultContent');
+      const { score, total, correct, podcastId } = getParams();
+      const wrong = total - correct;
+
+      // ===== چک کردن podcastId =====
+      if (!podcastId) {
+        container.innerHTML = '<div class="error-box">❌ شناسه پادکست پیدا نشد!<br><small style="font-size:14px;">لطفاً از صفحه آزمون دوباره امتحان کنید.</small></div>';
+        return;
+      }
+
+      // ===== ۱. دریافت سوالات =====
+      const { data: questions, error: qError } = await supabaseClient
+        .from('aql')
+        .select('*')
+        .eq('podcast_id', podcastId);
+
+      if (qError) {
+        container.innerHTML = '<div class="error-box">❌ خطا در دریافت سوالات: ' + qError.message + '</div>';
+        return;
+      }
+
+      if (!questions || questions.length === 0) {
+        container.innerHTML = '<div class="error-box">❌ هیچ سوالی برای این پادکست یافت نشد!</div>';
+        return;
+      }
+
+      // ===== ۲. دریافت کاربر =====
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) {
+        container.innerHTML = '<div class="error-box">❌ لطفاً وارد شوید</div>';
+        return;
+      }
+
+      // ===== ۳. دریافت پاسخ‌های کاربر =====
+      const questionIds = questions.map(function(q) { return q.id; });
+      const { data: userAnswers } = await supabaseClient
+        .from('answers')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('question_id', questionIds);
+
+      // ساخت مپ پاسخ‌ها
+      const answerMap = {};
+      (userAnswers || []).forEach(function(a) {
+        answerMap[a.question_id] = a;
+      });
+
+      // ===== ۴. ساخت HTML =====
+      let html = '';
+      html += '<div class="summary">';
+      html += '  <div class="score">' + score + '%</div>';
+      html += '  <div class="stats">';
+      html += '    <span class="correct">✅ درست: ' + correct + '</span>';
+      html += '    <span class="wrong">❌ غلط: ' + wrong + '</span>';
+      html += '    <span>📝 مجموع: ' + total + '</span>';
+      html += '  </div>';
+      html += '  <div class="feedback">' + getFeedback(score) + '</div>';
+      html += '</div>';
+      html += '<div style="margin-top:20px;">';
+      html += '  <h3 style="margin-bottom:15px;">🔍 بررسی پاسخ‌ها</h3>';
+
+      questions.forEach(function(q, index) {
+        const userAns = answerMap[q.id];
+        const selected = userAns ? userAns.selected_option : null;
+        const isCorrect = userAns ? userAns.is_correct : false;
+        const isAnswered = selected !== null && selected !== undefined;
+
+        let statusClass = 'question-review';
+        let statusIcon = '⬜';
+        let userAnswerHtml = 'پاسخ داده نشده';
+
+        if (isAnswered) {
+          if (isCorrect) {
+            statusClass += ' correct';
+            statusIcon = '✅';
+            userAnswerHtml = '<span class="answer user-answer correct-answer">' + selected + '</span>';
+          } else {
+            statusClass += ' wrong';
+            statusIcon = '❌';
+            userAnswerHtml = '<span class="answer user-answer wrong-answer">' + selected + '</span> → <span class="answer correct-answer">' + q.correct_answer + '</span>';
+          }
+        } else {
+          statusClass += ' wrong';
+          statusIcon = '⚠️';
+          userAnswerHtml = '<span class="answer wrong-answer">پاسخ نداده</span> → <span class="answer correct-answer">' + q.correct_answer + '</span>';
+        }
+
+        html += '<div class="' + statusClass + '">';
+        html += '  <div class="q-text">';
+        html += '    <span class="status-icon">' + statusIcon + '</span>';
+        html += '    ' + (index + 1) + '. ' + q.question;
+        html += '  </div>';
+        html += '  <div>پاسخ شما: ' + userAnswerHtml + '</div>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // =============================================
+    // اجرا
+    // =============================================
+    loadResult();
+  </script>
+</body>
+</html>
