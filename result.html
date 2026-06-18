@@ -1,84 +1,122 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>کارنامه آزمون</title>
-  <link rel="stylesheet" href="cssstyle.css" />
-  <style>
-    .result-box {
-      background: rgba(255,255,255,0.08);
-      padding: 30px;
-      border-radius: 20px;
-      margin: 20px 0;
-    }
-    .result-box .score {
-      font-size: 48px;
-      font-weight: bold;
-      color: #fbbf24;
-    }
-    .result-box .detail {
-      font-size: 20px;
-      margin-top: 10px;
-    }
-    .feedback {
-      margin-top: 20px;
-      font-size: 18px;
-      opacity: 0.9;
-    }
-    .back-btn {
-      background: #3b82f6;
-      margin-top: 20px;
-    }
-    .back-btn:hover {
-      background: #2563eb;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>📊 کارنامه</h1>
-    <div id="resultDisplay" class="result-box">
-      <!-- اطلاعات به‌صورت داینامیک پر می‌شود -->
-    </div>
-    <button class="back-btn" onclick="goToDashboard()">بازگشت به داشبورد</button>
-  </div>
+getElementById('resultContent');
 
-  <script>
-    // دریافت پارامترها از URL
-    function getParams() {
-      const params = new URLSearchParams(window.location.search);
-      return {
-        score: parseInt(params.get('score')) || 0,
-        total: parseInt(params.get('total')) || 0,
-        correct: parseInt(params.get('correct')) || 0,
-        podcastId: params.get('podcastId')
-      };
-    }
+      // ۱. دریافت سوالات این پادکست
+      const { data: questions, error: qError } = await supabaseClient
+        .from('aql')
+        .select('*')
+        .eq('podcast_id', podcastId);
 
-    function displayResult() {
-      const { score, total, correct } = getParams();
-      const container = document.getElementById('resultDisplay');
-      let emoji = '😢';
-      let feedback = 'نیاز به تمرین بیشتری دارید!';
-      if (score >= 80) { emoji = '🎉'; feedback = 'عالی! تسلط کامل دارید.'; }
-      else if (score >= 60) { emoji = '👍'; feedback = 'خوب بود، ولی جای پیشرفت دارید.'; }
-      else if (score >= 40) { emoji = '📖'; feedback = 'مرور دوباره پادکست توصیه می‌شود.'; }
+      if (qError  !questions  questions.length === 0) {
+        container.innerHTML = <div style="text-align:center;color:#f87171;">❌ خطا در دریافت سوالات</div>;
+        return;
+      }
 
-      container.innerHTML = `
-        <div class="score">${score}%</div>
-        <div class="detail">تعداد سوالات: ${total}</div>
-        <div class="detail">پاسخ‌های صحیح: ${correct}</div>
-        <div class="detail">پاسخ‌های غلط: ${total - correct}</div>
-        <div class="feedback">${emoji} ${feedback}</div>
+      // ۲. دریافت پاسخ‌های کاربر برای این سوالات
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) {
+        container.innerHTML = <div style="text-align:center;color:#f87171;">❌ لطفاً وارد شوید</div>;
+        return;
+      }
+
+      const questionIds = questions.map(q => q.id);
+      const { data: userAnswers, error: aError } = await supabaseClient
+        .from('answers')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('question_id', questionIds);
+
+      if (aError) {
+        console.error('خطا در دریافت پاسخ‌ها:', aError);
+      }
+
+      // ساخت مپ پاسخ‌ها: { questionId: { selected_option, is_correct } }
+      const answerMap = {};
+      (userAnswers || []).forEach(a => {
+        answerMap[a.question_id] = a;
+      });
+
+      // ===== نمایش نتیجه =====
+      let html = `
+        <div class="summary">
+          <div class="score">${score}%</div>
+          <div class="stats">
+            <span class="correct">✅ درست: ${correct}</span>
+            <span class="wrong">❌ غلط: ${wrong}</span>
+            <span>📝 مجموع: ${total}</span>
+          </div>
+          <div class="feedback">${getFeedback(score)}</div>
+        </div>
+        <div style="margin-top:20px;">
+          <h3 style="margin-bottom:15px;">🔍 بررسی پاسخ‌ها</h3>
       `;
+
+      // نمایش هر سوال به همراه پاسخ کاربر و پاسخ درست
+      questions.forEach((q, index) => {
+        const userAns = answerMap[q.id];
+        const selected = userAns ? userAns.selected_option : null;
+        const isCorrect = userAns ? userAns.is_correct : false;
+        const isAnswered = selected !== null && selected !== undefined;
+
+        let statusClass = 'question-review';
+        let statusIcon = '⬜';
+        let userAnswerHtml = 'پاسخ داده نشده';
+
+        if (isAnswered) {
+          if (isCorrect) {
+            statusClass += ' correct';
+            statusIcon = '✅';
+            userAnswerHtml = <span class="answer user-answer correct-answer">${selected}</span>;
+          } else {
+            statusClass += ' wrong';
+            statusIcon = '❌';
+            userAnswerHtml = `
+              <span class="answer user-answer wrong-answer">${selected}</span>
+              <span style="margin:0 8px;">→</span>
+              <span class="answer correct-answer">${q.correct_answer}</span>
+            `;
+          }
+        } else {
+          statusClass += ' wrong';
+          statusIcon = '⚠️';
+          userAnswerHtml = `
+            <span class="answer wrong-answer">پاسخ نداده</span>
+            <span style="margin:0 8px;">→</span>
+            <span class="answer correct-answer">${q.correct_answer}</span>
+          `;
+        }
+
+        html += `
+          <div class="${statusClass}">
+            <div class="q-text">
+              <span class="status-icon">${statusIcon}</span>
+              ${index+1}. ${q.question}
+            </div>
+            <div>
+              پاسخ شما: ${userAnswerHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
     }
 
-    function goToDashboard() {
+    // ===== بازخورد بر اساس نمره =====
+    function getFeedback(score) {
+      if (score >= 80) return '🎉 عالی! تسلط کامل داری!';
+      if (score >= 60) return '👍 خوب بود، ولی می‌تونی بهتر بشی!';
+      if (score >= 40) return '📖 مرور دوباره پادکست توصیه میشه.';
+      return '💪 نگران نباش، با تمرین بیشتر حتماً پیشرفت می‌کنی!';
+    }
+
+    // ===== بازگشت =====
+    function goDashboard() {
       window.location.href = 'dashboard.html';
     }
 
-    displayResult();
+    // ===== اجرا =====
+    loadResult();
   </script>
 </body>
 </html>
