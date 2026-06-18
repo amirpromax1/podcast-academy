@@ -1,152 +1,191 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>آزمون پادکست</title>
-  <link rel="stylesheet" href="cssstyle.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>آزمون</title>
   <style>
-    .question-box {
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: Tahoma, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      min-height: 100vh;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
       background: rgba(255,255,255,0.06);
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 700px;
+      width: 90%;
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    #questionCounter { opacity: 0.7; margin-bottom: 15px; text-align: center; }
+    .question-box {
+      background: rgba(255,255,255,0.05);
       padding: 20px;
       border-radius: 15px;
-      margin: 20px 0;
-      text-align: right;
+      margin-bottom: 20px;
     }
-    .options {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin: 15px 0;
-    }
+    .question-box p { font-size: 20px; font-weight: bold; margin-bottom: 15px; }
     .options label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 18px;
+      display: block;
+      padding: 10px 15px;
+      margin: 8px 0;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
       cursor: pointer;
+      transition: 0.3s;
     }
-    .options input[type="radio"] {
-      width: 18px;
-      height: 18px;
-    }
+    .options label:hover { background: rgba(139,92,246,0.3); }
+    .options input[type="radio"] { margin-left: 10px; }
     .nav-buttons {
       display: flex;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
       margin-top: 20px;
     }
-    .submit-btn {
-      background: #22c55e;
+    .nav-buttons button {
+      background: #8b5cf6;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+      flex: 1;
     }
-    .submit-btn:hover {
-      background: #16a34a;
-    }
-    #questionCounter {
-      opacity: 0.7;
-      margin-bottom: 10px;
+    .nav-buttons button:hover { background: #7c3aed; transform: scale(1.02); }
+    .nav-buttons .submit-btn { background: #22c55e; }
+    .nav-buttons .submit-btn:hover { background: #16a34a; }
+    #errorMsg {
+      color: #fca5a5;
+      background: rgba(239,68,68,0.15);
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      display: none;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🧠 آزمون</h1>
-    <div id="podcastTitle"></div>
+    <div id="errorMsg"></div>
     <div id="questionCounter"></div>
-    <div id="questionContainer">
-      <!-- سوالات به‌صورت داینامیک نمایش داده می‌شوند -->
-    </div>
+    <div id="questionContainer"></div>
     <div class="nav-buttons">
-      <button onclick="prevQuestion()">قبلی</button>
-      <button onclick="nextQuestion()">بعدی</button>
-      <button class="submit-btn" onclick="submitQuiz()">پایان آزمون</button>
+      <button onclick="prevQuestion()">⬅️ قبلی</button>
+      <button onclick="nextQuestion()">بعدی ➡️</button>
+      <button class="submit-btn" onclick="submitQuiz()">✅ پایان آزمون</button>
     </div>
   </div>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
+    // ===== تنظیمات =====
     const SUPABASE_URL = "https://rkdjnkkdrhyzxzdlypff.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZGpua2tkcmh5enh6ZGx5cGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NjAxMDksImV4cCI6MjA5NzMzNjEwOX0.vadAJI4DhbAi5Y12gRd-OLVUYjvKa8R69PYvT68niyo";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // ===== متغیرها =====
     let currentQuestionIndex = 0;
     let questions = [];
-    let answers = {}; // ذخیره پاسخ‌های کاربر: { questionId: selectedOption }
+    let answers = {};
     let podcastId = null;
 
-    // گرفتن podcastId از URL
+    // ===== گرفتن آیدی از URL =====
     function getPodcastId() {
       const params = new URLSearchParams(window.location.search);
       return params.get('podcastId');
     }
 
-    // بارگذاری سوالات از جدول aql (بر اساس podcastId)
-    async function loadQuestions() {
-      podcastId = getPodcastId();
-      if (!podcastId) {
-        alert('شناسه پادکست نامعتبر است');
-        window.location.href = 'dashboard.html';
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('aql')
-        .select('*')
-        .eq('podcast_id', podcastId);
-
-      if (error) {
-        console.error(error);
-        alert('خطا در بارگذاری سوالات');
-        return;
-      }
-      questions = data;
-      if (questions.length === 0) {
-        document.getElementById('questionContainer').innerHTML = '<p>هیچ سوالی برای این پادکست وجود ندارد.</p>';
-        return;
-      }
-      showQuestion(0);
+    // ===== نمایش خطا =====
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.style.display = 'block';
+      el.innerText = '⚠️ ' + msg;
     }
 
-    // نمایش سوال مشخص
+    function hideError() {
+      document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    // ===== بارگذاری سوالات =====
+    async function loadQuestions() {
+      podcastId = getPodcastId();
+      console.log('📌 podcastId:', podcastId); // دیباگ
+
+      if (!podcastId) {
+        showError('شناسه پادکست پیدا نشد!');
+        document.getElementById('questionContainer').innerHTML = '<p style="text-align:center;">❌ خطا: شناسه پادکست نامعتبر</p>';
+        return;
+      }
+
+      const container = document.getElementById('questionContainer');
+      container.innerHTML = '<div style="text-align:center;">⏳ در حال بارگذاری سوالات...</div>';
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('aql')
+          .select('*')
+          .eq('podcast_id', podcastId);
+
+        console.log('📦 data:', data); // دیباگ
+        console.log('❌ error:', error); // دیباگ
+
+        if (error) {
+          showError('خطا در دریافت سوالات: ' + error.message);
+          container.innerHTML = '<p style="text-align:center;">❌ خطا در دریافت سوالات</p>';
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          showError('هیچ سوالی برای این پادکست یافت نشد!');
+          container.innerHTML = '<p style="text-align:center;">📭 هیچ سوالی وجود ندارد</p>';
+          return;
+        }
+
+        questions = data;
+        hideError();
+        showQuestion(0);
+
+      } catch (err) {
+        console.error('🔥 خطای غیرمنتظره:', err);
+        showError('خطا: ' + err.message);
+        container.innerHTML = '<p style="text-align:center;">💥 خطای غیرمنتظره</p>';
+      }
+    }
+
+    // ===== نمایش سوال =====
     function showQuestion(index) {
       if (!questions.length) return;
       const q = questions[index];
-      const container = document.getElementById('questionContainer');
-      const counter = document.getElementById('questionCounter');
-      counter.innerText = سوال ${index+1} از ${questions.length};
+      document.getElementById('questionCounter').innerText = `سوال ${index+1} از ${questions.length}`;
 
-      let optionsHtml = '';
-      // فرض می‌کنیم options به صورت array ذخیره شده (مثلاً ["گزینه ۱", "گزینه ۲", ...])
-      const options = q.options || [];
-      options.forEach((opt, i) => {
+      let html = `<div class="question-box"><p>${q.question}</p><div class="options">`;
+      const opts = q.options || [];
+      opts.forEach(opt => {
         const checked = (answers[q.id] === opt) ? 'checked' : '';
-        optionsHtml += `
-          <label>
-            <input type="radio" name="question" value="${opt}" ${checked} onchange="saveAnswer('${q.id}', '${opt}')" />
-            ${opt}
-          </label>
-        `;
+        html += `<label><input type="radio" name="q" value="${opt}" ${checked} onchange="answers['${q.id}']='${opt}'"> ${opt}</label>`;
       });
-
-      container.innerHTML = `
-        <div class="question-box">
-          <p><strong>${q.question}</strong></p>
-          <div class="options">${optionsHtml}</div>
-        </div>
-      `;
+      html += '</div></div>';
+      document.getElementById('questionContainer').innerHTML = html;
     }
 
-    // ذخیره پاسخ انتخاب‌شده
-function saveAnswer(questionId, selected) {
-      answers[questionId] = selected;
-    }
-
-    // حرکت بین سوالات
+    // ===== قبلی / بعدی =====
     function nextQuestion() {
       if (currentQuestionIndex < questions.length - 1) {
         currentQuestionIndex++;
         showQuestion(currentQuestionIndex);
       }
     }
+
     function prevQuestion() {
       if (currentQuestionIndex > 0) {
         currentQuestionIndex--;
@@ -154,52 +193,40 @@ function saveAnswer(questionId, selected) {
       }
     }
 
-    // ثبت نهایی آزمون و محاسبه کارنامه
+    // ===== پایان آزمون =====
     async function submitQuiz() {
-      // بررسی اینکه به همه سوالات پاسخ داده شده یا نه
       const unanswered = questions.filter(q => !answers[q.id]);
       if (unanswered.length > 0) {
-        if (!confirm(`هنوز به ${unanswered.length} سوال پاسخ نداده‌اید. آیا مطمئن هستید؟`)) {
+        if (!confirm(`⚠️ هنوز به ${unanswered.length} سوال پاسخ ندادی! ادامه می‌دی؟`)) {
           return;
         }
       }
 
-      // گرفتن کاربر جاری
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user) {
-        alert('لطفاً وارد شوید');
+        alert('❌ لطفاً وارد شوید');
         return;
       }
 
-      // محاسبه نمره و ذخیره پاسخ‌ها در جدول answers
-      let correctCount = 0;
-      const total = questions.length;
-
-      // برای هر سوال، پاسخ کاربر رو با پاسخ صحیح مقایسه کن
+      let correct = 0;
       for (const q of questions) {
         const selected = answers[q.id] || null;
         const isCorrect = (selected === q.correct_answer);
-        if (isCorrect) correctCount++;
+        if (isCorrect) correct++;
 
-        // ذخیره در جدول answers (هر بار یک رکورد)
-        const { error } = await supabase
-          .from('answers')
-          .insert({
-            user_id: user.id,
-            question_id: q.id,
-            selected_option: selected,
-            is_correct: isCorrect,
-            created_at: new Date()
-          });
-        if (error) console.error('خطا در ذخیره پاسخ:', error);
+        await supabaseClient.from('answers').insert({
+          user_id: user.id,
+          question_id: q.id,
+          selected_option: selected,
+          is_correct: isCorrect
+        });
       }
 
-      const score = Math.round((correctCount / total) * 100);
-      // هدایت به صفحه نتیجه با پارامترها
-      window.location.href = result.html?score=${score}&total=${total}&correct=${correctCount}&podcastId=${podcastId};
+      const score = Math.round((correct / questions.length) * 100);
+      window.location.href = `result.html?score=${score}&total=${questions.length}&correct=${correct}`;
     }
 
-    // اجرا
+    // ===== اجرا =====
     loadQuestions();
   </script>
 </body>
