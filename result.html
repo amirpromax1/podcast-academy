@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>کارنامه آزمون</title>
+  <link rel="stylesheet" href="cssstyle.css" />
+  <style>
+    .result-box {
+      background: rgba(255,255,255,0.08);
+      padding: 30px;
+      border-radius: 20px;
+      margin: 20px 0;
+    }
+    .result-box .score {
+      font-size: 48px;
+      font-weight: bold;
+      color: #fbbf24;
+    }
+    .result-box .detail {
+      font-size: 20px;
+      margin-top: 10px;
+    }
+    .feedback {
+      margin-top: 20px;
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    .back-btn {
+      background: #3b82f6;
+      margin-top: 20px;
+    }
+    .back-btn:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 کارنامه</h1>
+    <div id="resultDisplay" class="result-box">
+      <!-- اطلاعات به‌صورت داینامیک پر می‌شود -->
+    </div>
+    <button class="back-btn" onclick="goToDashboard()">بازگشت به داشبورد</button>
+  </div>
+
+  <script>
+    // دریافت پارامترها از URL
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        score: parseInt(params.get('score')) || 0,
+        total: parseInt(params.get('total')) || 0,
+        correct: parseInt(params.get('correct')) || 0,
+        podcastId: params.get('podcastId')
+      };
+    }
+
+    function displayResult() {
+      const { score, total, correct } = getParams();
+      const container = document.getElementById('resultDisplay');
+      let emoji = '😢';
+      let feedback = 'نیاز به تمرین بیشتری دارید!';
+      if (score >= 80) { emoji = '🎉'; feedback = 'عالی! تسلط کامل دارید.'; }
+      else if (score >= 60) { emoji = '👍'; feedback = 'خوب بود، ولی جای پیشرفت دارید.'; }
+      else if (score >= 40) { emoji = '📖'; feedback = 'مرور دوباره پادکست توصیه می‌شود.'; }
+
+      container.innerHTML = `
+        <div class="score">${score}%</div>
+        <div class="detail">تعداد سوالات: ${total}</div>
+        <div class="detail">پاسخ‌های صحیح: ${correct}</div>
+        <div class="detail">پاسخ‌های غلط: ${total - correct}</div>
+        <div class="feedback">${emoji} ${feedback}</div>
+      `;
+    }
+
+    function goToDashboard() {
+      window.location.href = 'dashboard.html';
+    }
+
+    displayResult();
+  </script>
+</body>
+</html>
