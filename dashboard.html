@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>داشبورد | Podcast Academy</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>داشبورد</title>
   <style>
-    /* reset */
     * {
       margin: 0;
       padding: 0;
@@ -16,470 +15,327 @@
       background: linear-gradient(135deg, #0f172a, #1e293b);
       min-height: 100vh;
       color: #fff;
-      display: flex;
     }
-
-    /* ===== منوی کناری (Sidebar) ===== */
+    
+    /* منو */
     .sidebar {
-      width: 280px;
-      background: rgba(15, 23, 42, 0.97);
-      backdrop-filter: blur(12px);
-      padding: 30px 20px;
-      height: 100vh;
       position: fixed;
       top: 0;
-      right: -100%; /* کاملاً مخفی */
-      transition: 0.35s ease;
-      box-shadow: -5px 0 30px rgba(0,0,0,0.6);
-      z-index: 1000;
-      overflow-y: auto;
-      border-left: 1px solid rgba(255,255,255,0.05);
+      right: -300px;
+      width: 280px;
+      height: 100%;
+      background: #0f172a;
+      padding: 30px;
+      transition: 0.3s;
+      z-index: 999;
+      border-left: 1px solid rgba(255,255,255,0.1);
     }
     .sidebar.open {
-      right: 0; /* نمایش کامل */
+      right: 0;
     }
-
     .sidebar .close-btn {
-      background: rgba(255,255,255,0.08);
+      background: none;
       border: none;
       color: #fff;
-      font-size: 26px;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
+      font-size: 24px;
       cursor: pointer;
       margin-bottom: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: 0.3s;
-      margin-right: auto; /* در راست‌چین، دکمه رو به چپ می‌بره */
     }
-    .sidebar .close-btn:hover {
-      background: #ef4444;
-      transform: rotate(90deg);
-    }
-
     .sidebar .user-info {
       text-align: center;
-      margin-bottom: 35px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      padding-bottom: 25px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
     .sidebar .user-info .avatar {
-      font-size: 64px;
-      margin-bottom: 8px;
-      background: rgba(139, 92, 246, 0.2);
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-left: auto;
-      margin-right: auto;
+      font-size: 50px;
     }
     .sidebar .user-info .email {
-      opacity: 0.8;
+      opacity: 0.7;
       font-size: 14px;
-      margin-top: 8px;
-      word-break: break-all;
     }
     .sidebar .menu-item {
       display: block;
-      padding: 14px 20px;
-      margin: 6px 0;
-      border-radius: 12px;
+      padding: 12px 18px;
+      margin: 8px 0;
+      border-radius: 10px;
       color: #fff;
       text-decoration: none;
-      transition: 0.25s;
-      font-size: 16px;
+      transition: 0.3s;
+      background: rgba(255,255,255,0.05);
       cursor: pointer;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid transparent;
     }
     .sidebar .menu-item:hover {
       background: #8b5cf6;
-      border-color: #8b5cf6;
-      transform: translateX(-5px); /* در RTL به چپ می‌ره */
     }
     .sidebar .menu-item.logout {
       background: #ef4444;
       margin-top: 40px;
       text-align: center;
-      border: none;
     }
     .sidebar .menu-item.logout:hover {
       background: #dc2626;
-      transform: scale(1.02);
     }
-
-    /* ===== محتوای اصلی ===== */
+    
+    /* محتوای اصلی */
     .main {
-      flex: 1;
-      padding: 25px 30px;
-      margin-right: 0;
-      transition: 0.3s;
-      width: 100%;
-      min-height: 100vh;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 15px 20px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 15px;
       margin-bottom: 30px;
-      background: rgba(255,255,255,0.04);
-      padding: 12px 22px;
-      border-radius: 16px;
-      backdrop-filter: blur(4px);
     }
     .header h1 {
       font-size: 24px;
-      font-weight: normal;
-      letter-spacing: 1px;
     }
-    .header .hamburger {
-      background: rgba(255,255,255,0.08);
+    .hamburger {
+      background: none;
       border: none;
-      color: #fff;
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
       cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      transition: 0.3s;
+      padding: 8px;
     }
-    .header .hamburger:hover {
-      background: #8b5cf6;
-    }
-    .header .hamburger span {
+    .hamburger span {
       display: block;
-      width: 26px;
+      width: 28px;
       height: 3px;
       background: #fff;
+      margin: 5px 0;
       border-radius: 3px;
       transition: 0.3s;
     }
-
-    /* ===== کارت‌های پادکست ===== */
+    .hamburger:hover span {
+      background: #8b5cf6;
+    }
+    
+    /* پادکست‌ها */
     .podcast-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 25px;
-      margin-top: 15px;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
     }
     .podcast-card {
       background: rgba(255,255,255,0.06);
-      border-radius: 18px;
-      padding: 22px 18px 18px;
+      border-radius: 15px;
+      padding: 20px;
       text-align: center;
       transition: 0.3s;
-      cursor: default;
-      backdrop-filter: blur(4px);
-      border: 1px solid rgba(255,255,255,0.04);
     }
     .podcast-card:hover {
-      transform: translateY(-6px);
+      transform: translateY(-5px);
       background: rgba(255,255,255,0.12);
-      box-shadow: 0 12px 35px rgba(0,0,0,0.5);
     }
     .podcast-card .cover {
-      width: 100%;
-      height: 130px;
-      background: linear-gradient(145deg, #8b5cf6, #4f46e5);
-      border-radius: 14px;
-      margin-bottom: 14px;
+      background: linear-gradient(45deg, #8b5cf6, #4f46e5);
+      height: 120px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 44px;
-      box-shadow: inset 0 4px 20px rgba(0,0,0,0.2);
+      font-size: 40px;
+      margin-bottom: 12px;
     }
     .podcast-card h3 {
-      font-size: 17px;
-      margin-bottom: 4px;
-      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 5px;
     }
     .podcast-card p {
       font-size: 13px;
       opacity: 0.7;
-      margin-bottom: 16px;
-      height: 36px;
-      overflow: hidden;
+      margin-bottom: 12px;
     }
     .podcast-card .btn-start {
       background: #8b5cf6;
       border: none;
-      padding: 10px 16px;
-      border-radius: 30px;
+      padding: 8px 16px;
+      border-radius: 25px;
       color: #fff;
-      font-size: 14px;
       cursor: pointer;
+      font-size: 14px;
       transition: 0.3s;
       width: 100%;
-      font-weight: bold;
-      letter-spacing: 0.5px;
     }
     .podcast-card .btn-start:hover {
       background: #7c3aed;
-      transform: scale(1.03);
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+      transform: scale(1.02);
     }
-
-    /* ===== وضعیت خالی / بارگذاری ===== */
-    .empty-state, .loading-state {
+    
+    .empty-state {
       text-align: center;
-      padding: 70px 20px;
-      opacity: 0.7;
-      grid-column: 1 / -1;
+      padding: 60px 20px;
+      opacity: 0.6;
     }
-    .empty-state .icon, .loading-state .icon {
-      font-size: 64px;
-      margin-bottom: 16px;
+    .loading {
+      text-align: center;
+      padding: 40px;
     }
-    .loading-state .spinner {
-      width: 40px;
-      height: 40px;
-      margin: 0 auto 16px;
-      border: 4px solid rgba(255,255,255,0.1);
-      border-top: 4px solid #8b5cf6;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ===== پیام خطا ===== */
     #errorMsg {
+      background: rgba(239,68,68,0.2);
       color: #fca5a5;
-      background: rgba(239, 68, 68, 0.15);
-      padding: 14px 20px;
-      border-radius: 14px;
-      margin: 0 0 20px 0;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 20px;
       display: none;
-      text-align: center;
-      border-right: 4px solid #ef4444;
-    }
-
-    /* ===== واکنش‌گرا ===== */
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 100%;
-        right: -100%;
-      }
-      .main {
-        padding: 15px;
-      }
-      .header h1 {
-        font-size: 18px;
-      }
-      .podcast-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-      }
-    }
-    @media (max-width: 480px) {
-      .podcast-grid {
-        grid-template-columns: 1fr;
-      }
     }
   </style>
 </head>
 <body>
 
-  <!-- ===== منوی کناری ===== -->
-  <div class="sidebar" id="sidebar">
-    <button class="close-btn" onclick="closeSidebar()">✕</button>
-    <div class="user-info">
-      <div class="avatar">👤</div>
-      <div class="email" id="userEmail">---</div>
-    </div>
-    <a class="menu-item" href="dashboard.html">📊 داشبورد</a>
-    <a class="menu-item" href="#" onclick="alert('به زودی')">📜 تاریخچه</a>
-    <a class="menu-item" href="#" onclick="alert('به زودی')">⚙️ تنظیمات</a>
-    <a class="menu-item logout" onclick="logoutUser()">🚪 خروج</a>
+<!-- منو -->
+<div class="sidebar" id="sidebar">
+  <button class="close-btn" onclick="closeSidebar()">✕</button>
+  <div class="user-info">
+    <div class="avatar">👤</div>
+    <div class="email" id="userEmail">---</div>
   </div>
+  <a class="menu-item" href="dashboard.html">📊 داشبورد</a>
+  <a class="menu-item" href="#" onclick="alert('به زودی')">📜 تاریخچه</a>
+  <a class="menu-item" href="#" onclick="alert('به زودی')">⚙️ تنظیمات</a>
+  <a class="menu-item logout" onclick="logoutUser()">🚪 خروج</a>
+</div>
 
-  <!-- ===== محتوای اصلی ===== -->
-  <div class="main">
-    <div class="header">
-      <h1>📚 داشبورد من</h1>
-      <button class="hamburger" onclick="openSidebar()" aria-label="باز کردن منو">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-
-    <div id="errorMsg"></div>
-
-    <div id="podcastContainer" class="podcast-grid">
-      <!-- پادکست‌ها اینجا می‌آیند -->
-    </div>
+<!-- محتوا -->
+<div class="main">
+  <div class="header">
+    <h1>📚 داشبورد من</h1>
+    <button class="hamburger" onclick="openSidebar()">
+      <span></span><span></span><span></span>
+    </button>
   </div>
+  
+  <div id="errorMsg"></div>
+  <div id="podcastContainer" class="podcast-grid"></div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
-    // =============================================
-    // ۱. توابع منو (مستقل و در دسترس)
-    // =============================================
-    function openSidebar() {
-      console.log('👉 منو باز شد');
-      document.getElementById('sidebar').classList.add('open');
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+// ===== توابع منو =====
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// بستن منو با کلیک بیرون
+document.addEventListener('click', function(e) {
+  const sidebar = document.getElementById('sidebar');
+  const hamburger = document.querySelector('.hamburger');
+  if (sidebar.classList.contains('open') && 
+      !sidebar.contains(e.target) && 
+      !hamburger.contains(e.target)) {
+    closeSidebar();
+  }
+});
+
+// ===== تنظیمات Supabase =====
+const SUPABASE_URL = "https://rkdjnkkdrhyzxzdlypff.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZGpua2tkcmh5enh6ZGx5cGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NjAxMDksImV4cCI6MjA5NzMzNjEwOX0.vadAJI4DhbAi5Y12gRd-OLVUYjvKa8R69PYvT68niyo";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ===== توابع کمکی =====
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.style.display = 'block';
+  el.innerText = '⚠️ ' + msg;
+}
+function hideError() {
+  document.getElementById('errorMsg').style.display = 'none';
+}
+
+// ===== بررسی کاربر =====
+async function checkUser() {
+  try {
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (error || !data.user) {
+      window.location.href = 'login.html';
+      return null;
     }
-    function closeSidebar() {
-      console.log('👉 منو بسته شد');
-      document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('userEmail').innerText = data.user.email || 'کاربر';
+    return data.user;
+  } catch(err) {
+    showError('خطا: ' + err.message);
+    return null;
+  }
+}
+
+// ===== بارگذاری پادکست‌ها =====
+async function loadPodcasts() {
+  const container = document.getElementById('podcastContainer');
+  container.innerHTML = '<div class="loading">⏳ بارگذاری...</div>';
+  
+  try {
+    const { data, error } = await supabaseClient
+      .from('podcasts')
+      .select('*');
+      
+    if(error) {
+      showError('خطا: ' + error.message);
+      container.innerHTML = '<div class="empty-state">😵 خطا در دریافت</div>';
+      return;
     }
-
-    // بستن منو با کلیک بیرون (اختیاری)
-    document.addEventListener('click', function(e) {
-      const sidebar = document.getElementById('sidebar');
-      const hamburger = document.querySelector('.hamburger');
-      if (sidebar.classList.contains('open') && 
-          !sidebar.contains(e.target) && 
-          !hamburger.contains(e.target)) {
-        closeSidebar();
-      }
-    });
-
-    // =============================================
-    // ۲. تنظیمات Supabase
-    // =============================================
-    const SUPABASE_URL = "https://rkdjnkkdrhyzxzdlypff.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZGpua2tkcmh5enh6ZGx5cGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NjAxMDksImV4cCI6MjA5NzMzNjEwOX0.vadAJI4DhbAi5Y12gRd-OLVUYjvKa8R69PYvT68niyo";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // =============================================
-    // ۳. توابع کمکی
-    // =============================================
-    function showError(msg) {
-      const el = document.getElementById('errorMsg');
-      el.style.display = 'block';
-      el.innerText = '⚠️ ' + msg;
-    }
-    function hideError() {
-      document.getElementById('errorMsg').style.display = 'none';
-    }
-
-    // =============================================
-    // ۴. بررسی لاگین
-    // =============================================
-    async function checkUser() {
-      try {
-        const { data, error } = await supabase.auth.getUser();
-        if (error || !data.user) {
-          window.location.href = 'login.html';
-          return null;
-        }
-        document.getElementById('userEmail').innerText = data.user.email || 'کاربر';
-        return data.user;
-      } catch (err) {
-        showError('مشکل در ارتباط با سرور: ' + err.message);
-        return null;
-      }
-    }
-
-    // =============================================
-    // ۵. بارگذاری پادکست‌ها
-    // =============================================
-    async function loadPodcasts() {
-      const container = document.getElementById('podcastContainer');
-      // نمایش حالت بارگذاری
+    
+    if(!data || data.length === 0) {
       container.innerHTML = `
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <div class="icon">⏳</div>
-          <p>در حال دریافت پادکست‌ها...</p>
+        <div class="empty-state">
+          <div style="font-size:50px;">📭</div>
+          <p>هیچ پادکستی وجود ندارد</p>
+          <p style="font-size:14px;opacity:0.7;">از SQL Editor یک پادکست اضافه کنید</p>
         </div>
       `;
-
-      try {
-        const { data, error } = await supabase
-          .from('podcasts')
-          .select('*');
-
-        if (error) {
-          console.error('❌ خطا:', error);
-          showError('خطا در دریافت: ' + error.message);
-          container.innerHTML = `<div class="empty-state"><div class="icon">😵</div><p>ارتباط با دیتابیس برقرار نشد</p></div>`;
-          return;
-        }
-
-        console.log('✅ پادکست‌ها:', data); // مهم برای دیباگ
-
-        if (!data || data.length === 0) {
-          container.innerHTML = `
-            <div class="empty-state">
-              <div class="icon">📭</div>
-              <p style="font-size:18px;font-weight:bold;">هیچ پادکستی یافت نشد!</p>
-              <p style="font-size:14px;opacity:0.7;">لطفاً از طریق SQL Editor یک پادکست نمونه اضافه کنید.</p>
-            </div>
-          `;
-          hideError();
-          return;
-        }
-
-        // ساخت کارت‌ها
-        let html = '';
-        data.forEach(pod => {
-          html += `
-            <div class="podcast-card">
-              <div class="cover">🎙</div>
-              <h3>${pod.title || 'بدون عنوان'}</h3>
-              <p>${pod.description || ''}</p>
-              <button class="btn-start" onclick="goToQuiz('${pod.id}')">شرکت در آزمون</button>
-            </div>
-          `;
-        });
-        container.innerHTML = html;
-        hideError();
-
-      } catch (err) {
-        console.error('❌ خطای غیرمنتظره:', err);
-        showError('خطا: ' + err.message);
-        container.innerHTML = `<div class="empty-state"><div class="icon">💥</div><p>خطای غیرمنتظره</p></div>`;
-      }
+      return;
     }
+    
+    let html = '';
+    data.forEach(pod => {
+      html += `
+        <div class="podcast-card">
+          <div class="cover">🎙</div>
+          <h3>${pod.title || 'بدون عنوان'}</h3>
+          <p>${pod.description || ''}</p>
+          <button class="btn-start" onclick="goToQuiz('${pod.id}')">شرکت در آزمون</button>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+    hideError();
+    
+  } catch(err) {
+    showError('خطا: ' + err.message);
+    container.innerHTML = '<div class="empty-state">💥 خطای غیرمنتظره</div>';
+  }
+}
 
-    // =============================================
-    // ۶. رفتن به آزمون
-    // =============================================
-    function goToQuiz(podcastId) {
-      if (!podcastId) {
-        showError('شناسه پادکست نامعتبر');
-        return;
-      }
-      window.location.href = `quiz.html?podcastId=${podcastId}`;
-    }
+// ===== رفتن به آزمون =====
+function goToQuiz(id) {
+  if(!id) return;
+  window.location.href = 'quiz.html?podcastId=' + id;
+}
 
-    // =============================================
-    // ۷. خروج
-    // =============================================
-    async function logoutUser() {
-      try {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          showError('خطا در خروج: ' + error.message);
-          return;
-        }
-        closeSidebar();
-        window.location.href = 'login.html';
-      } catch (err) {
-        showError('خطا: ' + err.message);
-      }
-    }
+// ===== خروج =====
+async function logoutUser() {
+  try {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'login.html';
+  } catch(err) {
+    showError('خطا در خروج: ' + err.message);
+  }
+}
 
-    // =============================================
-    // ۸. اجرای اصلی
-    // =============================================
-    (async function init() {
-      const user = await checkUser();
-      if (!user) return; // اگر لاگین نباشه، به login می‌ره
+// ===== اجرا =====
+(async function() {
+  const user = await checkUser();
+  if(user) {
+    await loadPodcasts();
+  }
+})();
+</script>
 
-      await loadPodcasts();
-    })();
-  </script>
 </body>
 </html>
